@@ -4,3 +4,4 @@
 library diet;
 
 export 'src/range.dart';
+export 'src/string_extension.dart';
