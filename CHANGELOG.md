@@ -1,3 +1,7 @@
+## 0.1.1+1
+
+- throw index error
+
 ## 0.1.1
 
 - feat: runeSubstring
