@@ -1,3 +1,7 @@
+## 0.1.2
+
+- feat: result extension
+
 ## 0.1.1+1
 
 - throw index error

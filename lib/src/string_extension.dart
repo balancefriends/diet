@@ -7,4 +7,11 @@ extension DietStringExtension on String {
     }
     return String.fromCharCodes(runes.toList().sublist(start, end));
   }
+
+  String runeSlice(int start, [int end]) {
+    if (end != null) {
+      checkListIndex(end, runes.length);
+    }
+    return String.fromCharCodes(runes.toList().sublist(start, end));
+  }
 }
