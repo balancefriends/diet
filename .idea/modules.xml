@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/diet.iml" filepath="$PROJECT_DIR$/diet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/diet/diet.iml" filepath="$PROJECT_DIR$/packages/diet/diet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/diet_parent.iml" filepath="$PROJECT_DIR$/diet_parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/diet_test/diet_test.iml" filepath="$PROJECT_DIR$/packages/diet_test/diet_test.iml" />
     </modules>
   </component>
 </project>

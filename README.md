@@ -1,22 +1,12 @@
-A library for Dart developers.
+# Diet
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Diet is Dietfriends's SDK for Dart and Flutter.
 
-## Usage
+## Packages
 
-A simple usage example:
+- diet
+- diet_test
 
-```dart
-import 'package:diet/diet.dart';
+### diet
 
-main() {
-  var awesome = new Awesome();
-}
-```
-
-## Features and bugs
-
-Please file feature requests and bugs at the [issue tracker][tracker].
-
-[tracker]: http://example.com/issues/replaceme
+### diet_test
