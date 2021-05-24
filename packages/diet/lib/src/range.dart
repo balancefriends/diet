@@ -1,7 +1,5 @@
 import 'dart:collection';
 
-import 'package:quiver/check.dart';
-
 /// Notation	Definition	      Factory method
 /// (a..b)	  {x | a < x < b}	  open
 /// [a..b]	  {x | a <= x <= b}	closed
@@ -12,19 +10,23 @@ import 'package:quiver/check.dart';
 /// (-∞..b)	  {x | x < b}	      lessThan
 /// (-∞..b]	  {x | x <= b}	    atMost
 /// (-∞..+∞)	{x}	all
-
+//TODO(Amond): implement
 class Range<T extends num> {
-  final Cut<T> lowerBound;
-  final Cut<T> upperBound;
+  final Cut lowerBound;
+  final Cut upperBound;
 
-  Range({this.lowerBound, this.upperBound});
+  Range({Cut<num>? lowerBound, Cut<num>? upperBound})
+      : lowerBound =
+            Cut.closed(lowerBound?.value.toDouble() ?? double.negativeInfinity),
+        upperBound =
+            Cut.closed(upperBound?.value.toDouble() ?? double.infinity);
 
   /// Returns `true` if `value` is within the bounds of this range. For example, on the
   /// range `[0..2)`, `contains(1)` returns `true`, while `contains(2)`
   /// returns `false`.
   bool contains(T value) {
-    checkNotNull(value);
-    return lowerBound.isLessThan(value) && !upperBound.isLessThan(value);
+    return lowerBound.isLessThan(value.toDouble()) &&
+        upperBound.isGreaterThan(value.toDouble());
   }
 
   // Computed properties
@@ -36,10 +38,10 @@ class Range<T extends num> {
   }
 
   Range<T> gap(Range<T> other) {
-    var isThisFirst = lowerBound.compareTo(other.lowerBound) < 0;
-    var firstRange = isThisFirst ? this : other;
-    var secondRange = isThisFirst ? other : this;
-    return Range(
+    final isThisFirst = lowerBound.compareTo(other.lowerBound) < 0;
+    final firstRange = isThisFirst ? this : other;
+    final secondRange = isThisFirst ? other : this;
+    return Range<T>(
         lowerBound: firstRange.upperBound, upperBound: secondRange.lowerBound);
   }
 
@@ -62,7 +64,7 @@ class Range<T extends num> {
     } else {
       var newLower = (lowerCmp <= 0) ? lowerBound : other.lowerBound;
       var newUpper = (upperCmp >= 0) ? upperBound : other.upperBound;
-      return Range.create(newLower, newUpper);
+      return Range(lowerBound: newLower, upperBound: newUpper);
     }
   }
 
@@ -116,7 +118,7 @@ class Range<T extends num> {
     return Range();
   }
 
-  factory Range.create(Cut<T> lowerBound, Cut<T> upperBound) {
+  factory Range.create(Cut<T>? lowerBound, Cut<T>? upperBound) {
     return Range(lowerBound: lowerBound, upperBound: upperBound);
   }
 }
@@ -137,11 +139,12 @@ class Cut<T extends num> implements Comparable<Cut<T>> {
   }
 
   bool isLessThan(T other) {
-    return value < other;
+    return value.toDouble() < other.toDouble() || (closed && value == other);
   }
 
   bool isGreaterThan(T other) {
-    return value > other;
+    return value > other || (closed && value == other);
+    ;
   }
 }
 
