@@ -2,5 +2,7 @@
 library diet_test;
 
 export 'src/fixture.dart';
-export 'src/grpc/fake_client_call.dart';
-export 'src/grpc/mock_response_future.dart';
+export 'src/grpc/mockito/fake_client_call.dart';
+export 'src/grpc/mockito/fake_response_future.dart';
+export 'src/grpc/mocktail/mock_client_call.dart';
+export 'src/grpc/mocktail/mock_response_future.dart';

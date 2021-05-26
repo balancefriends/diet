@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:mocktail/mocktail.dart';
 
+/// Dependency: Mocktail
 class MockResponseFuture<T> extends Mock implements ResponseFuture<T> {
   final Future<T> future;
   final Map<String, String> _trailer;
@@ -21,11 +22,10 @@ class MockResponseFuture<T> extends Mock implements ResponseFuture<T> {
   Future<Map<String, String>> get trailers async => _trailer;
 
   @override
-  Future<S> then<S>(FutureOr<S> Function(T value) onValue,
-          {Function onError}) =>
-      future.then(onValue, onError: onError);
+  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
+      future.catchError(onError, test: test);
 
   @override
-  Future<T> catchError(Function onError, {bool Function(Object error) test}) =>
-      future.catchError(onError, test: test);
+  Future<S> then<S>(FutureOr<S> Function(T) onValue, {Function? onError}) =>
+      future.then(onValue, onError: onError);
 }

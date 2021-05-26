@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
+import 'package:mockito/mockito.dart';
 
-class FakeClientCall<Q, R> extends ClientCall<Q, R> {
+/// Dependency: Mockito
+class FakeClientCall<Q, R> extends Fake implements ClientCall<Q, R> {
   FakeClientCall(
     this.result,
-  ) : super(null, null, CallOptions()) {
+  ) {
     result.then((value) {
       _responses.add(value);
       _responses.close();
