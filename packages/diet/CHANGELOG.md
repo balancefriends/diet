@@ -1,3 +1,11 @@
+## 1.0.0+3
+
+- fix: null safety warning
+
+## 1.0.0+2
+
+- fix: result extension 
+
 ## 1.0.0
 
 - feat: null safety

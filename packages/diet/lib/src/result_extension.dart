@@ -1,19 +1,19 @@
 import 'package:async/async.dart' as $async;
 import 'package:meta/meta.dart';
-import 'package:quiver/check.dart';
 
 extension ResultExtension<T> on $async.Result<T> {
   bool get isSuccess => isValue;
+
   bool get hasValue => isValue && asValue!.value != null;
+
   T get value => asValue!.value;
+
   Object get error => asError!.error;
 
   @optionalTypeArgs
-  R when<R extends Object>(
-      {required R Function(T value) success,
-      required R Function(dynamic error) error}) {
-    checkNotNull(success != null);
-    checkNotNull(error != null);
+  TResult when<TResult extends Object?>(
+      {required TResult Function(T value) success,
+      required TResult Function(dynamic error) error}) {
     if (isValue) {
       return success(asValue!.value);
     } else {
@@ -22,12 +22,11 @@ extension ResultExtension<T> on $async.Result<T> {
   }
 
   @optionalTypeArgs
-  R maybeWhen<R extends Object>({
-    R Function(T value)? success,
-    R Function(dynamic e)? error,
-    required R Function() orElse,
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(T value)? success,
+    TResult Function(dynamic e)? error,
+    required TResult Function() orElse,
   }) {
-    checkNotNull(orElse);
     if (isValue && success != null) {
       return success(asValue!.value);
     } else if (isError && error != null) {
@@ -37,12 +36,10 @@ extension ResultExtension<T> on $async.Result<T> {
   }
 
   @optionalTypeArgs
-  R map<R extends Object>({
-    required R Function(T value) success,
-    required R Function(dynamic error) error,
+  TResult map<TResult extends Object?>({
+    required TResult Function(T value) success,
+    required TResult Function(dynamic error) error,
   }) {
-    checkNotNull(success);
-    checkNotNull(error);
     if (isValue) {
       return success(asValue!.value);
     } else {
@@ -51,16 +48,15 @@ extension ResultExtension<T> on $async.Result<T> {
   }
 
   @optionalTypeArgs
-  R maybeMap<R extends Object>({
-    R Function(T value)? success,
-    R Function(dynamic value)? error,
-    required R Function() orElse,
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(T value)? success,
+    TResult Function(dynamic value)? error,
+    required TResult Function() orElse,
   }) {
-    checkNotNull(orElse);
     if (isValue && success != null) {
       return success(asValue!.value);
-    } else if (isError && orElse != null) {
-      return error!(asError!.error);
+    } else if (isError && error != null) {
+      return error(asError!.error);
     }
     return orElse();
   }
