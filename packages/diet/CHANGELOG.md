@@ -1,3 +1,9 @@
+## 1.1.0
+
+- feat: pair
+- feat: triple
+- feat: future result extension
+
 ## 1.0.0+3
 
 - fix: null safety warning

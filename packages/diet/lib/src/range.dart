@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 /// Notation	Definition	      Factory method
 /// (a..b)	  {x | a < x < b}	  open
 /// [a..b]	  {x | a <= x <= b}	closed
@@ -144,7 +142,6 @@ class Cut<T extends num> implements Comparable<Cut<T>> {
 
   bool isGreaterThan(T other) {
     return value > other || (closed && value == other);
-    ;
   }
 }
 

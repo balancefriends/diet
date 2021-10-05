@@ -6,3 +6,4 @@ library diet;
 export 'src/range.dart';
 export 'src/string_extension.dart';
 export 'src/result_extension.dart';
+export 'src/tuples.dart';
