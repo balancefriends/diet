@@ -2,9 +2,17 @@ import 'package:diet/diet.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('open tests', () {
+  group('cut', () {
+    test('', () {
+      final cut = Cut.open(1);
+      expect(cut.isGreaterThan(1), isFalse);
+    });
+  });
+
+  group('open tests - {x | a < x < b}', () {
     test('int', () {
-      var range = Range<int>.open(1, 5);
+      var range = Range<int>.open(4, 8);
+      expect(range.hasLowerBound, isTrue);
       expect(range.contains(1), isFalse);
       expect(range.contains(2), isTrue);
       expect(range.contains(5), isFalse);
