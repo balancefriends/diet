@@ -25,7 +25,7 @@ import 'range.dart';
 /// below all values or above all values. With this object defined in this way, an interval can
 /// always be represented by a pair of {@code Cut} instances.
 abstract class Cut<C extends Comparable> implements Comparable<Cut<C>> {
-  final C endpoint;
+  final C? endpoint;
 
   Cut(this.endpoint);
 
@@ -58,13 +58,13 @@ abstract class Cut<C extends Comparable> implements Comparable<Cut<C>> {
   // note: overridden by {BELOW,ABOVE}_ALL
   @override
   int compareTo(Cut<C> that) {
-    if (that == belowAll()) {
+    if (that is BelowAll) {
       return 1;
     }
-    if (that == aboveAll()) {
+    if (that is AboveAll) {
       return -1;
     }
-    int result = Range.compareOrThrow(endpoint, that.endpoint);
+    int result = Range.compareOrThrow(endpoint!, that.endpoint!);
     if (result != 0) {
       return result;
     }
@@ -72,18 +72,17 @@ abstract class Cut<C extends Comparable> implements Comparable<Cut<C>> {
     return Booleans.compare(this is AboveValue, that is AboveValue);
   }
 
-  static Cut<C> belowAll<C extends Comparable>() =>
-      _BelowAll._INSTANCE as Cut<C>;
+  static Cut<C> belowAll<C extends Comparable>() => BelowAll<C>();
 
-  static Cut<C> aboveAll<C extends Comparable>() =>
-      _AboveAll._INSTANCE as Cut<C>;
+  static Cut<C> aboveAll<C extends Comparable>() => AboveAll<C>();
 
   @override
   bool operator ==(Object obj) {
     if (obj is Cut) {
       // It might not really be a Cut<C>, but we'll catch a CCE if it's not
-      Cut<C> that = obj as Cut<C>;
+
       try {
+        Cut<C> that = obj as Cut<C>;
         int compareResult = compareTo(that);
         return compareResult == 0;
       } catch (e) {
@@ -108,17 +107,17 @@ abstract class Cut<C extends Comparable> implements Comparable<Cut<C>> {
 
 /// The implementation neither produces nor consumes any non-null instance of type C, so
 /// casting the type parameter is safe.
-class _BelowAll extends Cut<Comparable> {
-  static final _BelowAll _INSTANCE = _BelowAll();
+class BelowAll<C extends Comparable> extends Cut<C> {
+  static final BelowAll _INSTANCE = BelowAll();
 
   /// No code ever sees this bogus value for `endpoint`: This class overrides both methods that
   /// use the `endpoint` field, compareTo() and endpoint(). Additionally, the main implementation
   /// of Cut.compareTo checks for belowAll before reading accessing `endpoint` on another Cut
   /// instance.
-  _BelowAll() : super("");
+  BelowAll() : super(null);
 
   @override
-  Comparable get endpoint {
+  C get endpoint {
     throw StateError("range unbounded on this side");
   }
 
@@ -131,17 +130,16 @@ class _BelowAll extends Cut<Comparable> {
       throw AssertionError("this statement should be unreachable");
 
   @override
-  bool isLessThan(Comparable value) =>
-      Range.compareOrThrow(endpoint, value) <= 0;
+  bool isLessThan(Comparable value) => true;
 
   @override
-  Cut<Comparable> withLowerBoundType(
+  Cut<C> withLowerBoundType(
       BoundType boundType, DiscreteDomain<Comparable> domain) {
     throw StateError('');
   }
 
   @override
-  Cut<Comparable> withUpperBoundType(
+  Cut<C> withUpperBoundType(
       BoundType boundType, DiscreteDomain<Comparable> domain) {
     throw AssertionError("this statement should be unreachable");
   }
@@ -162,12 +160,12 @@ class _BelowAll extends Cut<Comparable> {
   }
 
   @override
-  Comparable? greatestValueBelow(DiscreteDomain<Comparable> domain) {
+  C? greatestValueBelow(DiscreteDomain<C> domain) {
     throw AssertionError();
   }
 
   @override
-  Cut<Comparable> canonical(DiscreteDomain<Comparable> domain) {
+  Cut<C> canonical(DiscreteDomain<C> domain) {
     try {
       return Cut.belowValue(domain.minValue());
     } catch (e) {
@@ -176,12 +174,13 @@ class _BelowAll extends Cut<Comparable> {
   }
 
   @override
-  int compareTo(Cut<Comparable> o) {
+  int compareTo(Cut<C> o) {
+    if (o is BelowAll) {
+      return 0;
+    }
+
     return (o == this) ? 0 : -1;
   }
-
-  @override
-  int get hashCode => Object.hash(this, null);
 
   @override
   String toString() {
@@ -189,13 +188,13 @@ class _BelowAll extends Cut<Comparable> {
   }
 }
 
-class _AboveAll extends Cut<Comparable> {
-  static final _AboveAll _INSTANCE = _AboveAll();
+class AboveAll<C extends Comparable> extends Cut<C> {
+  //static final AboveAll _INSTANCE = AboveAll();
 
-  _AboveAll() : super("");
+  AboveAll() : super(null) {}
 
   @override
-  Comparable get endpoint {
+  C get endpoint {
     throw StateError("range unbounded on this side");
   }
 
@@ -236,24 +235,24 @@ class _AboveAll extends Cut<Comparable> {
   }
 
   @override
-  Cut<Comparable> withLowerBoundType(
+  Cut<C> withLowerBoundType(
       BoundType boundType, DiscreteDomain<Comparable> domain) {
     throw AssertionError("this statement should be unreachable");
   }
 
   @override
-  Cut<Comparable> withUpperBoundType(
+  Cut<C> withUpperBoundType(
       BoundType boundType, DiscreteDomain<Comparable> domain) {
-    throw new StateError('');
+    throw StateError('');
   }
 
   @override
   int compareTo(Cut<Comparable> o) {
+    if (o is AboveAll) {
+      return 0;
+    }
     return (o == this) ? 0 : 1;
   }
-
-  @override
-  int get hashCode => Object.hash(this, null);
 
   @override
   String toString() {
@@ -266,7 +265,7 @@ class _BelowValue<C extends Comparable> extends Cut<C> {
 
   @override
   bool isLessThan(C value) {
-    return Range.compareOrThrow(endpoint, value) <= 0;
+    return Range.compareOrThrow(endpoint!, value) <= 0;
   }
 
   @override
@@ -285,7 +284,7 @@ class _BelowValue<C extends Comparable> extends Cut<C> {
       case BoundType.closed:
         return this;
       case BoundType.open:
-        C? previous = domain.previous(endpoint);
+        C? previous = domain.previous(endpoint!);
         return (previous == null) ? Cut.belowAll<C>() : AboveValue<C>(previous);
       default:
         throw AssertionError();
@@ -296,7 +295,7 @@ class _BelowValue<C extends Comparable> extends Cut<C> {
   Cut<C> withUpperBoundType(BoundType boundType, DiscreteDomain<C> domain) {
     switch (boundType) {
       case BoundType.closed:
-        C? previous = domain.previous(endpoint);
+        C? previous = domain.previous(endpoint!);
         return (previous == null) ? Cut.aboveAll<C>() : AboveValue<C>(previous);
       case BoundType.open:
         return this;
@@ -321,7 +320,7 @@ class _BelowValue<C extends Comparable> extends Cut<C> {
 
   @override
   Comparable? greatestValueBelow(DiscreteDomain<C> domain) {
-    return domain.previous(endpoint);
+    return domain.previous(endpoint!);
   }
 
   @override
@@ -345,7 +344,7 @@ class AboveValue<C extends Comparable> extends Cut<C> {
 
   @override
   bool isLessThan(C value) {
-    return Range.compareOrThrow(endpoint, value) < 0;
+    return Range.compareOrThrow(endpoint!, value) < 0;
   }
 
   @override
@@ -364,7 +363,7 @@ class AboveValue<C extends Comparable> extends Cut<C> {
       case BoundType.open:
         return this;
       case BoundType.closed:
-        C? next = domain.next(endpoint);
+        C? next = domain.next(endpoint!);
         return (next == null) ? Cut.belowAll<C>() : Cut.belowValue(next);
       default:
         throw AssertionError();
@@ -375,7 +374,7 @@ class AboveValue<C extends Comparable> extends Cut<C> {
   Cut<C> withUpperBoundType(BoundType boundType, DiscreteDomain<C> domain) {
     switch (boundType) {
       case BoundType.open:
-        C? next = domain.next(endpoint);
+        C? next = domain.next(endpoint!);
         return (next == null) ? Cut.aboveAll<C>() : Cut.belowValue(next);
       case BoundType.closed:
         return this;
@@ -400,7 +399,7 @@ class AboveValue<C extends Comparable> extends Cut<C> {
 
   @override
   C? leastValueAbove(DiscreteDomain<C> domain) {
-    return domain.next(endpoint);
+    return domain.next(endpoint!);
   }
 
   @override

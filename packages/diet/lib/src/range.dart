@@ -4,6 +4,7 @@ import 'package:quiver/check.dart';
 import 'bound_type.dart';
 import 'cut.dart';
 import 'discrete_domain.dart';
+import 'ordering.dart';
 
 // name:
 
@@ -19,6 +20,11 @@ import 'discrete_domain.dart';
 /// (-∞..+∞)	{x}	all
 //TODO(Amond): implement
 class Range<C extends Comparable> {
+  static Range<C> create<C extends Comparable>(
+      Cut<C> lowerBound, Cut<C> upperBound) {
+    return Range._(lowerBound, upperBound);
+  }
+
   /// Returns a range that contains all values strictly greater than {@code lower} and strictly less
   /// than {@code upper}.
   ///
@@ -50,26 +56,22 @@ class Range<C extends Comparable> {
     return create(Cut.belowValue(lower), Cut.belowValue(upper));
   }
 
-  /**
-   * Returns a range that contains all values strictly greater than {@code lower} and less than or
-   * equal to {@code upper}.
-   *
-   * @throws IllegalArgumentException if {@code lower} is greater than {@code upper}
-   * @throws ClassCastException if {@code lower} and {@code upper} are not mutually comparable
-   * @since 14.0
-   */
+  /// Returns a range that contains all values strictly greater than {@code lower} and less than or
+  /// equal to {@code upper}.
+  ///
+  /// @throws IllegalArgumentException if {@code lower} is greater than {@code upper}
+  /// @throws ClassCastException if {@code lower} and {@code upper} are not mutually comparable
+  /// @since 14.0
   static Range<C> openClosed<C extends Comparable>(C lower, C upper) {
     return create(Cut.aboveValue(lower), Cut.aboveValue(upper));
   }
 
-  /**
-   * Returns a range that contains any value from {@code lower} to {@code upper}, where each
-   * endpoint may be either inclusive (closed) or exclusive (open).
-   *
-   * @throws IllegalArgumentException if {@code lower} is greater than {@code upper}
-   * @throws ClassCastException if {@code lower} and {@code upper} are not mutually comparable
-   * @since 14.0
-   */
+  /// Returns a range that contains any value from {@code lower} to {@code upper}, where each
+  /// endpoint may be either inclusive (closed) or exclusive (open).
+  ///
+  /// @throws IllegalArgumentException if {@code lower} is greater than {@code upper}
+  /// @throws ClassCastException if {@code lower} and {@code upper} are not mutually comparable
+  /// @since 14.0
   static Range<C> range<C extends Comparable>(
       C lower, BoundType lowerType, C upper, BoundType upperType) {
     checkNotNull(lowerType);
@@ -98,12 +100,10 @@ class Range<C extends Comparable> {
     return create(Cut.belowAll<C>(), Cut.aboveValue(endpoint));
   }
 
-  /**
-   * Returns a range with no lower bound up to the given endpoint, which may be either inclusive
-   * (closed) or exclusive (open).
-   *
-   * @since 14.0
-   */
+  /// Returns a range with no lower bound up to the given endpoint, which may be either inclusive
+  /// (closed) or exclusive (open).
+  ///
+  /// @since 14.0
   static Range<C> upTo<C extends Comparable>(C endpoint, BoundType boundType) {
     switch (boundType) {
       case BoundType.open:
@@ -145,13 +145,13 @@ class Range<C extends Comparable> {
     }
   }
 
-  static final Range<Comparable> _ALL = Range._(Cut.belowAll(), Cut.aboveAll());
+  // static final Range<C> _ALL = Range._(Cut.belowAll(), Cut.aboveAll());
 
   /// Returns a range that contains every value of type {@code C}.
   ///
   /// @since 14.0
   static Range<C> all<C extends Comparable>() {
-    return _ALL as Range<C>;
+    return Range._(Cut.belowAll<C>(), Cut.aboveAll<C>());
   }
 
   /// Returns a range that {@linkplain Range#contains(Comparable) contains} only the given value. The
@@ -162,19 +162,18 @@ class Range<C extends Comparable> {
     return closed(value, value);
   }
 
-  /**
-   * Returns the minimal range that {@linkplain Range#contains(Comparable) contains} all of the
-   * given values. The returned range is {@linkplain BoundType#CLOSED closed} on both ends.
-   *
-   * @throws ClassCastException if the values are not mutually comparable
-   * @throws NoSuchElementException if {@code values} is empty
-   * @throws NullPointerException if any of {@code values} is null
-   * @since 14.0
-   */
+  /// Returns the minimal range that {@linkplain Range#contains(Comparable) contains} all of the
+  /// given values. The returned range is {@linkplain BoundType#CLOSED closed} on both ends.
+  ///
+  /// @throws ClassCastException if the values are not mutually comparable
+  /// @throws NoSuchElementException if {@code values} is empty
+  /// @throws NullPointerException if any of {@code values} is null
+  /// @since 14.0
   static Range<C> encloseAll<C extends Comparable>(Iterable<C> values) {
     checkNotNull(values);
 
     Iterator<C> valueIterator = values.iterator;
+    valueIterator.moveNext();
     C min = checkNotNull(valueIterator.current);
     C max = min;
     while (valueIterator.moveNext()) {
@@ -197,14 +196,14 @@ class Range<C extends Comparable> {
   }
 
   /// Returns `true` if this range has a lower endpoint.
-  bool get hasLowerBound => lowerBound != Cut.belowAll();
+  bool get hasLowerBound => lowerBound is! BelowAll;
 
   /// Returns the lower endpoint of this range.
   ///
   /// @throws IllegalStateException if this range is unbounded below (that is, {@link
   ///     #hasLowerBound()} returns {@code false})
   C lowerEndpoint() {
-    return lowerBound.endpoint;
+    return lowerBound.endpoint!;
   }
 
   /// Returns the type of this range's lower bound: {@link BoundType#CLOSED} if the range includes
@@ -218,7 +217,7 @@ class Range<C extends Comparable> {
 
   /// Returns {@code true} if this range has an upper endpoint. */
   bool hasUpperBound() {
-    return upperBound != Cut.aboveAll();
+    return upperBound is! AboveAll;
   }
 
   /// Returns the upper endpoint of this range.
@@ -226,7 +225,7 @@ class Range<C extends Comparable> {
   /// @throws IllegalStateException if this range is unbounded above (that is, {@link
   ///     #hasUpperBound()} returns {@code false})
   C upperEndpoint() {
-    return upperBound.endpoint;
+    return upperBound.endpoint!;
   }
 
   /// Returns the type of this range's upper bound: {@link BoundType#CLOSED} if the range includes
@@ -257,10 +256,8 @@ class Range<C extends Comparable> {
     return lowerBound.isLessThan(value) && !upperBound.isLessThan(value);
   }
 
-  /**
-   * Returns {@code true} if every element in {@code values} is {@linkplain #contains contained} in
-   * this range.
-   */
+  /// Returns {@code true} if every element in {@code values} is {@linkplain #contains contained} in
+  /// this range.
   bool containsAll(Iterable<C> values) {
     if (values.isEmpty) {
       return true;
@@ -328,22 +325,20 @@ class Range<C extends Comparable> {
         other.lowerBound.compareTo(upperBound) <= 0;
   }
 
-  /**
-   * Returns the maximal range {@linkplain #encloses enclosed} by both this range and {@code
-   * connectedRange}, if such a range exists.
-   *
-   * <p>For example, the intersection of {@code [1..5]} and {@code (3..7)} is {@code (3..5]}. The
-   * resulting range may be empty; for example, {@code [1..5)} intersected with {@code [5..7)}
-   * yields the empty range {@code [5..5)}.
-   *
-   * <p>The intersection exists if and only if the two ranges are {@linkplain #isConnected
-   * connected}.
-   *
-   * <p>The intersection operation is commutative, associative and idempotent, and its identity
-   * element is {@link Range#all}).
-   *
-   * @throws IllegalArgumentException if {@code isConnected(connectedRange)} is {@code false}
-   */
+  /// Returns the maximal range {@linkplain #encloses enclosed} by both this range and {@code
+  /// connectedRange}, if such a range exists.
+  ///
+  /// <p>For example, the intersection of {@code [1..5]} and {@code (3..7)} is {@code (3..5]}. The
+  /// resulting range may be empty; for example, {@code [1..5)} intersected with {@code [5..7)}
+  /// yields the empty range {@code [5..5)}.
+  ///
+  /// <p>The intersection exists if and only if the two ranges are {@linkplain #isConnected
+  /// connected}.
+  ///
+  /// <p>The intersection operation is commutative, associative and idempotent, and its identity
+  /// element is {@link Range#all}).
+  ///
+  /// @throws IllegalArgumentException if {@code isConnected(connectedRange)} is {@code false}
   Range<C> intersection(Range<C> connectedRange) {
     int lowerCmp = lowerBound.compareTo(connectedRange.lowerBound);
     int upperCmp = upperBound.compareTo(connectedRange.upperBound);
@@ -369,23 +364,21 @@ class Range<C extends Comparable> {
     }
   }
 
-  /**
-   * Returns the maximal range lying between this range and {@code otherRange}, if such a range
-   * exists. The resulting range may be empty if the two ranges are adjacent but non-overlapping.
-   *
-   * <p>For example, the gap of {@code [1..5]} and {@code (7..10)} is {@code (5..7]}. The resulting
-   * range may be empty; for example, the gap between {@code [1..5)} {@code [5..7)} yields the empty
-   * range {@code [5..5)}.
-   *
-   * <p>The gap exists if and only if the two ranges are either disconnected or immediately adjacent
-   * (any intersection must be an empty range).
-   *
-   * <p>The gap operation is commutative.
-   *
-   * @throws IllegalArgumentException if this range and {@code otherRange} have a nonempty
-   *     intersection
-   * @since 27.0
-   */
+  /// Returns the maximal range lying between this range and {@code otherRange}, if such a range
+  /// exists. The resulting range may be empty if the two ranges are adjacent but non-overlapping.
+  ///
+  /// <p>For example, the gap of {@code [1..5]} and {@code (7..10)} is {@code (5..7]}. The resulting
+  /// range may be empty; for example, the gap between {@code [1..5)} {@code [5..7)} yields the empty
+  /// range {@code [5..5)}.
+  ///
+  /// <p>The gap exists if and only if the two ranges are either disconnected or immediately adjacent
+  /// (any intersection must be an empty range).
+  ///
+  /// <p>The gap operation is commutative.
+  ///
+  /// @throws IllegalArgumentException if this range and {@code otherRange} have a nonempty
+  ///     intersection
+  /// @since 27.0
   Range<C> gap(Range<C> otherRange) {
     /*
      * For an explanation of the basic principle behind this check, see
@@ -479,11 +472,12 @@ class Range<C extends Comparable> {
     return lowerBound.hashCode * 31 + upperBound.hashCode;
   }
 
+  @override
   String toString() {
     return _toString(lowerBound, upperBound);
   }
 
-  static String toString(Cut lowerBound, Cut upperBound) {
+  static String _toString(Cut lowerBound, Cut upperBound) {
     StringBuffer sb = StringBuffer();
     lowerBound.describeAsLowerBound(sb);
     sb.write("..");
@@ -491,19 +485,16 @@ class Range<C extends Comparable> {
     return sb.toString();
   }
 
+  /*
   Object readResolve() {
-    if (this == ALL) {
+    if (this == _ALL) {
       return all();
     } else {
       return this;
     }
-  }
+  }*/
 
   static int compareOrThrow(Comparable left, Comparable right) {
     return left.compareTo(right);
   }
 }
-
-class IntRage extends Range<int> {}
-
-class DoubleRage extends Range<double> {}

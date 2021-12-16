@@ -18,34 +18,23 @@ import 'package:quiver/check.dart';
 import 'ordering.dart';
 import 'reverse_natural_ordering.dart';
 
-class NaturalOrdering extends Ordering<Comparable> {
-  static final NaturalOrdering INSTANCE = NaturalOrdering();
+class NaturalOrdering extends Ordering<Comparable<dynamic>> {
+  static final NaturalOrdering INSTANCE = NaturalOrdering._();
 
-  Ordering<Comparable?>? nullsFirst;
-  Ordering<Comparable?>? nullsLast;
-
-  @override
-  int compareTo(Comparable right) {
-//checkNotNull(left); // for GWT
-//checkNotNull(right);
-    return (this).compareTo(right);
-  }
+  Ordering<Comparable?>? _nullsFirst;
+  Ordering<Comparable?>? _nullsLast;
 
   @override
   Ordering<S?> nullsFirst<S extends Comparable>() {
-    Ordering<Comparable?>? result = nullsFirst;
-    if (result == null) {
-      result = nullsFirst = super.nullsFirst<Comparable>();
-    }
+    Ordering<Comparable?>? result = _nullsFirst;
+    result ??= _nullsFirst = super.nullsFirst<Comparable>();
     return result as Ordering<S>;
   }
 
   @override
   Ordering<S?> nullsLast<S extends Comparable>() {
-    Ordering<Comparable?>? result = nullsLast;
-    if (result == null) {
-      result = nullsLast = super.nullsLast<Comparable>();
-    }
+    Ordering<Comparable?>? result = _nullsLast;
+    result ??= _nullsLast = super.nullsLast<Comparable>();
     return result as Ordering<S>;
   }
 
@@ -65,4 +54,9 @@ class NaturalOrdering extends Ordering<Comparable> {
   }
 
   NaturalOrdering._();
+
+  @override
+  int compare(Comparable left, Comparable right) {
+    return left.compareTo(right);
+  }
 }
