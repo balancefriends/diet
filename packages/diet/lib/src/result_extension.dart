@@ -37,6 +37,13 @@ extension ResultExtension<V> on $async.Result<V> {
     return orElse();
   }
 
+  /// The given function is applied if this is a `Value`.
+  ///
+  /// Example:
+  /// ```dart
+  /// Result.value(12).map ( (v) => "flower" ) // Result: ValueResult("flower")
+  /// Result.error(12).map ( (v) =>  "flower" ) // Result: ErrorResult(12)
+  /// ```
   $async.Result<U> map<U>(U Function(V) transform) {
     if (isValue) {
       return $async.Result.value(transform(asValue!.value));
@@ -45,6 +52,13 @@ extension ResultExtension<V> on $async.Result<V> {
     }
   }
 
+  /// The given function is applied if this is a `Error`.
+  ///
+  /// Example:
+  /// ```
+  /// Result.value(12).mapLeft ( (v) => "flower" ) // Result: ValueResult(12)
+  /// Result.error(12).mapLeft ( (v) => "flower" )  // Result: ErrorResult("flower)
+  /// ```
   $async.Result<V> mapError(dynamic Function(dynamic) transform) {
     if (isValue) {
       return $async.Result.value(asValue!.value);
@@ -52,6 +66,11 @@ extension ResultExtension<V> on $async.Result<V> {
       return $async.Result.error(transform(asError!.error));
     }
   }
+
+  /// Map over Error and Value of this Result
+  $async.Result<U> bimap<U>(U Function(V) transformValue,
+          dynamic Function(dynamic) transformError) =>
+      mapBoth(transformValue, transformError);
 
   $async.Result<U> mapBoth<U>(
       U Function(V) transformValue, dynamic Function(dynamic) transformError) {
@@ -92,7 +111,23 @@ extension ResultExtension<V> on $async.Result<V> {
 
   $async.Result<V> onFailure(Function(dynamic) f) => onError(f);
 
-  X fold<X>(X Function(V) success, X Function(dynamic) failure) {
+  /// Applies `success` if this is a [isValue] or `error` if this is a [isError].
+  ///
+  /// Example:
+  /// ```
+  /// final result: Result<Value> = possiblyFailingOperation()
+  /// result.fold(
+  ///      { (v) => log("operation failed with $v") },
+  ///      { (e) => log("operation succeeded with $e") }
+  /// )
+  /// ```
+  ///
+  /// [success] the function to apply if this is a [isValue]
+  /// [failure] the function to apply if this is a [isError]
+  /// returns the results of applying the function
+  @optionalTypeArgs
+  X fold<X extends Object?>(
+      X Function(V value) success, X Function(dynamic error) failure) {
     if (isValue) {
       return success(asValue!.value);
     } else {
@@ -103,6 +138,8 @@ extension ResultExtension<V> on $async.Result<V> {
   $async.Result<Pair<V, U>> fanout<U>($async.Result<U> Function() other) =>
       flatMap((outer) => other().map((v) => Pair(outer, v)));
 
+  /// Returns `false` if [isError] or returns the result of the application of
+  //  the given predicate to the [value] value.
   bool any(bool Function(V) predicate) {
     if (isValue) {
       return predicate(asValue!.value);
